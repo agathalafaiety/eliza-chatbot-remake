@@ -28,6 +28,8 @@ Com o Streamlit rodando no seu computador, abra o [chat local](http://127.0.0.1:
 
 O histórico fica em `data/eliza.db`. [Configuração do banco](docs/persistence.md)
 
+Para disponibilizar o Classic online com histórico temporário por visitante, use a [demonstração pública](docs/publicacao.md).
+
 ## Modo IA com Gemini
 
 Instale o SDK na mesma `.venv`.
@@ -59,6 +61,7 @@ No VS Code, abra o [notebook de acompanhamento](notebooks/01_ambiente.ipynb), se
 ```text
 eliza-chatbot-remake/
 ├── app.py       # Entrada do Streamlit
+├── demo/        # Demonstração pública do Classic
 ├── ui/          # Chat e barra lateral
 ├── eliza/       # Regras do Classic, configuração e memória
 ├── database/    # Modelos e repositório SQLite
