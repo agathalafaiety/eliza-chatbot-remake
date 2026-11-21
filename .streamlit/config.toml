@@ -4,3 +4,6 @@ primaryColor = "#55c9b4"
 
 [browser]
 gatherUsageStats = false
+
+[server]
+address = "127.0.0.1"

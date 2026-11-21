@@ -1,20 +1,12 @@
 # Eliza Chatbot Remake
 
-Como um programa de regras simples consegue dar a impressão de que está acompanhando uma conversa? Este projeto revisita essa ideia da ELIZA com uma recriação em português brasileiro, inspirada no roteiro DOCTOR.
+ELIZA Classic em português brasileiro, com chat local no Streamlit, histórico em SQLite e exemplos no Jupyter. A recriação é inspirada no roteiro DOCTOR e usa reconhecimento de padrões, transformação de pronomes e perguntas reflexivas. ELIZA é uma simulação conversacional.
 
 > **Você:** Estou preocupado com meu futuro.
 >
 > **ELIZA:** O que preocupa você em relação a seu futuro?
 
-A regra reconhece a expressão de preocupação, troca “meu” por “seu” e reaproveita o trecho em uma pergunta. No Jupyter, você pode acompanhar qual regra foi acionada a cada resposta. O Classic funciona offline como uma simulação conversacional.
-
-## Decisões de engenharia
-
-- **Respostas rastreáveis.** O Classic aplica regras por prioridade e alterna as respostas em ordem fixa. A mesma sequência de mensagens reproduz a conversa.
-- **Histórico consistente.** SQLite guarda a mensagem e a resposta na mesma transação. O controle de revisão detecta quando outra gravação alterou a conversa.
-- **Sessões que podem ser retomadas.** Ao reabrir o histórico, o serviço reproduz as entradas anteriores para recuperar a rotação de respostas e o último tema.
-
-O notebook demonstra a conversa e o ciclo completo do histórico. Streamlit, Google AI e ChromaDB fazem parte do [roteiro de desenvolvimento](docs/architecture.md#próximas-etapas).
+O chat funciona offline e permite criar, retomar e excluir conversas. Ao retomar uma conversa, o Classic recupera o contexto a partir das mensagens salvas.
 
 ## Começar no Windows
 
@@ -22,10 +14,23 @@ Abra a pasta do projeto no VS Code. Use Python 3.11 ou superior e as extensões 
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m streamlit run app.py
 ```
 
 Se `python` abrir a Microsoft Store, use o caminho completo de uma instalação Python funcional para criar `.venv`.
+
+O Streamlit abre o chat no navegador em [127.0.0.1:8501](http://127.0.0.1:8501). Na barra lateral, clique em **Nova conversa** para começar, use **Retomar conversa** para abrir um histórico ou selecione **Excluir conversa** e confirme a exclusão.
+
+As conversas são armazenadas por padrão em `data/eliza.db`. Para escolher outro arquivo, copie `.env.example` para `.env` e ajuste `ELIZA_DATABASE_URL`. [Guia de persistência](docs/persistence.md)
+
+## Acompanhar no Jupyter
+
+Instale `requirements-dev.txt` na mesma `.venv` para adicionar Jupyter, pytest e Ruff.
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+```
 
 1. Abra [o notebook de acompanhamento](notebooks/01_ambiente.ipynb).
 2. Em **Select Kernel → Python Environments**, selecione `.venv\Scripts\python.exe`.
@@ -46,12 +51,11 @@ print(eliza.respond("Estou preocupado com meu futuro."))
 
 Cada instância mantém o contexto de uma conversa. Use `reply()` para consultar a regra que gerou a resposta e `reset()` para reiniciar a sessão. [Guia do Classic](docs/classic.md)
 
-Para persistir o histórico, use `ConversationRepository.from_settings()` e envie mensagens via `ConversationMemory.send()`. O banco padrão é `data/eliza.db`. Para definir outro caminho, copie `.env.example` para `.env` e ajuste `ELIZA_DATABASE_URL`. O Git ignora o banco padrão e o arquivo `.env`. [Guia de persistência e exemplos da API](docs/persistence.md)
-
 ## Estrutura do projeto
 
 | Pasta | Responsabilidade |
 | --- | --- |
+| `ui/` | Chat e gerenciamento de conversas no Streamlit, iniciados por `app.py` |
 | `eliza/` | Classic, regras, reflexões, configuração e retomada de conversas |
 | `database/` | Modelos SQLAlchemy e operações do histórico SQLite |
 | `notebooks/` | Exemplos para Jupyter local |
@@ -59,7 +63,7 @@ Para persistir o histórico, use `ConversationRepository.from_settings()` e envi
 | `tools/` | Verificação do ambiente e execução automatizada do notebook |
 | `docs/` | Arquitetura e guias de uso |
 
-`requirements-dev.txt` instala a base de `requirements.txt` junto com Jupyter, pytest e Ruff. Os arquivos opcionais `requirements-ai.txt` e `requirements-memory.txt` acrescentam o SDK Google e o ChromaDB, respectivamente. [Arquitetura e próximas etapas](docs/architecture.md)
+Google AI e ChromaDB estão no roteiro. Seus arquivos de dependências são opcionais para quem for experimentar essas integrações. [Arquitetura e próximas etapas](docs/architecture.md)
 
 ## Verificar alterações
 
@@ -71,4 +75,4 @@ Para persistir o histórico, use `ConversationRepository.from_settings()` e envi
 .\.venv\Scripts\python.exe tools/validate_notebook.py --execute
 ```
 
-O workflow de qualidade executa as verificações em Windows e Linux com Python 3.11 e 3.12. [GitHub Actions](.github/workflows/quality.yml)
+Os testes de interface usam o AppTest do Streamlit e um banco SQLite temporário. O workflow de qualidade executa as verificações em Windows e Linux com Python 3.11 e 3.12. [GitHub Actions](.github/workflows/quality.yml)

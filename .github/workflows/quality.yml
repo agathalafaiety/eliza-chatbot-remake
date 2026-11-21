@@ -28,7 +28,7 @@ jobs:
         run: python -m ruff check .
       - name: Verificar formatação
         run: python -m ruff format --check .
-      - name: Testar Classic e persistência
+      - name: Testar Classic, persistência e interface
         run: python -m pytest -q
       - name: Verificar SQLite e imports
         run: python tools/check_environment.py --notebooks

@@ -1,11 +1,12 @@
 # Arquitetura
 
-O projeto atende em português brasileiro. O notebook é o ponto de entrada para experimentar o Classic e o histórico no VS Code com Jupyter local.
+O projeto atende em português brasileiro. `app.py` inicia a interface Streamlit. O notebook permite explorar as regras e o histórico no Jupyter local.
 
 ## Camadas atuais
 
 | Camada | Responsabilidade |
 | --- | --- |
+| `app.py`, `ui/` | Abrem o repositório, exibem o chat e gerenciam a conversa selecionada |
 | `eliza/classic.py` | Aplica as regras de conversa e mantém o estado de uma sessão usando a biblioteca padrão do Python |
 | `eliza/patterns.py`, `reflections.py`, `personality.py` | Definem padrões, substituições de pronomes e textos da simulação |
 | `eliza/memory.py` | Reconstrói uma sessão Classic a partir do histórico e coordena o salvamento de cada turno |
@@ -14,6 +15,8 @@ O projeto atende em português brasileiro. O notebook é o ponto de entrada para
 | `notebooks/01_ambiente.ipynb` | Mostra o Classic e o ciclo de vida de uma conversa usando dados fictícios |
 
 Para conversar em memória, o notebook chama `ClassicEliza` diretamente. Para salvar uma interação, chama `ConversationMemory.send()` com o identificador da conversa. O serviço lê o histórico pelo repositório, reconstrói o estado do Classic e grava a mensagem e a resposta juntas.
+
+No Streamlit, `st.session_state` guarda a seleção e a confirmação de exclusão. A cada execução a interface lê o histórico do SQLite e encaminha novos envios ao mesmo serviço usado pelo notebook. Cada execução tem seu próprio escopo de repositório. A interface requer um arquivo SQLite para preservar conversas entre execuções.
 
 ## Regras e estado da conversa
 
@@ -29,7 +32,6 @@ Ao retomar o Classic, o serviço reproduz as entradas anteriores para recompor a
 
 ## Próximas etapas
 
-1. **Streamlit.** A interface em português gerencia a conversa selecionada e chama o serviço de memória para responder e atualizar o histórico.
-2. **Google AI.** Um adaptador opcional recebe o contexto recente dentro de um limite e trata falhas do provedor. O Classic segue disponível offline.
-3. **ChromaDB.** Um índice opcional recupera trechos relevantes para o modo AI. SQLite será a fonte do histórico e permitirá reconstruir o índice. Quando a integração existir, a exclusão também deverá remover as entradas correspondentes do índice.
-4. **Validação integrada.** Exercitar os fluxos no navegador e documentar a implantação.
+1. **Google AI.** Um adaptador opcional recebe o contexto recente dentro de um limite e trata falhas do provedor. O Classic segue disponível offline.
+2. **ChromaDB.** Um índice opcional recupera trechos relevantes para o modo AI. SQLite será a fonte do histórico e permitirá reconstruir o índice. Quando a integração existir, a exclusão também deverá remover as entradas correspondentes do índice.
+3. **Implantação.** Validar os modos integrados e documentar o ambiente de produção.
