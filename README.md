@@ -72,17 +72,3 @@ Cada instância mantém o contexto de uma conversa. Use `reply()` para consultar
 | `tests/` | Testes do Classic, da configuração e da persistência |
 | `tools/` | Verificação do ambiente e execução automatizada do notebook |
 | `docs/` | Arquitetura e guias de uso |
-
-Google AI e ChromaDB estão no roteiro. Seus arquivos de dependências são opcionais para quem for experimentar essas integrações. [Arquitetura e próximas etapas](docs/architecture.md)
-
-## Verificar alterações
-
-```powershell
-.\.venv\Scripts\python.exe -m pip check
-.\.venv\Scripts\python.exe -m pytest -q
-.\.venv\Scripts\python.exe -m ruff check .
-.\.venv\Scripts\python.exe -m ruff format --check .
-.\.venv\Scripts\python.exe tools/validate_notebook.py --execute
-```
-
-Os testes de interface usam o AppTest do Streamlit e um banco SQLite temporário. O workflow de qualidade executa as verificações em Windows e Linux com Python 3.11 e 3.12. [GitHub Actions](.github/workflows/quality.yml)
