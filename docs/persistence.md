@@ -59,7 +59,7 @@ Nesse último caso, um `Path` relativo parte da pasta atual, como qualquer camin
 
 O título aceita de 1 a 120 caracteres depois de retirar espaços externos. Mensagens vazias são rejeitadas. O serviço Classic aplica o limite de 4000 caracteres de entrada antes de gravar. As mensagens mantêm conteúdo, papel, posição, UUID, data UTC e a regra da resposta quando disponível.
 
-O modo `ai` pode ser registrado como metadado no repositório, mas o serviço atual recusa gerar respostas para esse modo. Nenhum provedor AI é chamado automaticamente.
+O modo `ai` usa o adaptador do Gemini e guarda os turnos na mesma estrutura SQLite. Para retomar, o adaptador usa as mensagens recentes da conversa como contexto. O modo Classic usa seu próprio serviço de memória.
 
 ## Transações e retomada
 
@@ -99,7 +99,7 @@ Comandos de validação local:
 .\.venv\Scripts\python.exe tools/validate_notebook.py --execute
 ```
 
-Os testes cobrem reabertura de arquivo, Unicode, ordem e UTC, paginação, isolamento de conversas, exclusão em cascata, rejeição de órfãos, parâmetros SQL, rollback de uma falha real por trigger, concorrência com revisões, leitura consistente durante outra gravação e retomada Classic além de sua janela de sessão. As verificações usam o ambiente local e não fazem chamadas à API Google. A execução remota do workflow precisa ser verificada separadamente.
+Os testes cobrem reabertura de arquivo, Unicode, ordem e UTC, paginação, isolamento de conversas, exclusão em cascata, rejeição de órfãos, parâmetros SQL, rollback de uma falha real por trigger, concorrência com revisões, leitura consistente durante outra gravação e retomada Classic além de sua janela de sessão. Os testes da integração Gemini usam HTTP simulado.
 
 Resultados locais desta etapa no Windows, com Python 3.12.14:
 

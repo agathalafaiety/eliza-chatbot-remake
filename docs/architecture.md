@@ -18,6 +18,8 @@ Para conversar em memória, o notebook chama `ClassicEliza` diretamente. Para sa
 
 No Streamlit, `st.session_state` guarda a seleção e a confirmação de exclusão. A cada execução a interface lê o histórico do SQLite e encaminha novos envios ao mesmo serviço usado pelo notebook. Cada execução tem seu próprio escopo de repositório. A interface requer um arquivo SQLite para preservar conversas entre execuções.
 
+O modo é definido na criação da conversa. No modo IA, `eliza/ai.py` usa a API Gemini com instruções em português brasileiro. A requisição inclui a mensagem atual e até dez turnos anteriores completos, limitados a 12.000 caracteres de histórico. O adaptador limita a saída a 1.024 tokens. O histórico completo fica no SQLite. A geração ocorre antes da gravação e o turno só é salvo após uma resposta com texto e uma verificação da revisão. [Referência da API Gemini](https://ai.google.dev/api/generate-content)
+
 ## Regras e estado da conversa
 
 Classic normaliza a entrada, verifica repetições e busca padrões em ordem de prioridade. A resposta selecionada pode incorporar um fragmento da mensagem com os pronomes ajustados. Cada instância mantém seus próprios contadores de respostas, último tema e os últimos 20 turnos por padrão. [Detalhes do Classic](classic.md)
@@ -32,6 +34,5 @@ Ao retomar o Classic, o serviço reproduz as entradas anteriores para recompor a
 
 ## Próximas etapas
 
-1. **Google AI.** Um adaptador opcional recebe o contexto recente dentro de um limite e trata falhas do provedor. O Classic segue disponível offline.
-2. **ChromaDB.** Um índice opcional recupera trechos relevantes para o modo AI. SQLite será a fonte do histórico e permitirá reconstruir o índice. Quando a integração existir, a exclusão também deverá remover as entradas correspondentes do índice.
-3. **Implantação.** Validar os modos integrados e documentar o ambiente de produção.
+1. **ChromaDB.** Um índice opcional recupera trechos relevantes para o modo IA. SQLite será a fonte do histórico e permitirá reconstruir o índice. Quando a integração existir, a exclusão também deverá remover as entradas correspondentes do índice.
+2. **Implantação.** Validar os modos integrados e documentar o ambiente de produção.

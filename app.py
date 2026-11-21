@@ -1,9 +1,10 @@
-"""Entrada da interface web do ELIZA Classic."""
+"""Entrada da interface web da ELIZA."""
 
 import streamlit as st
 from pydantic import ValidationError
 
 from database import ConversationNotFoundError, ConversationRepository, StorageError
+from eliza.ai import unavailable_reason
 from eliza.config import load_settings
 from ui.chat import render_chat
 from ui.sidebar import render_sidebar
@@ -12,11 +13,12 @@ from ui.sidebar import render_sidebar
 def main() -> None:
     st.set_page_config(page_title="ELIZA Chatbot Remake", page_icon=":material/chat:")
     st.title("ELIZA Chatbot Remake")
-    st.caption("Classic · Português brasileiro · Offline")
+    st.caption("Português brasileiro · Classic offline ou IA com Gemini")
     st.caption("ELIZA é uma simulação conversacional baseada em regras.")
 
     try:
-        path = load_settings().database_path()
+        settings = load_settings()
+        path = settings.database_path()
     except ValidationError:
         st.error("Configuração do banco inválida. Confira ELIZA_DATABASE_URL.")
         return
@@ -30,8 +32,9 @@ def main() -> None:
 
     try:
         with ConversationRepository(path) as repository:
-            conversation_id = render_sidebar(repository)
-            render_chat(repository, conversation_id)
+            ai_unavailable = unavailable_reason(settings)
+            conversation_id = render_sidebar(repository, ai_unavailable)
+            render_chat(repository, conversation_id, settings, ai_unavailable)
     except ConversationNotFoundError:
         st.session_state.pop("conversation_id", None)
         st.session_state.pop("delete_target", None)

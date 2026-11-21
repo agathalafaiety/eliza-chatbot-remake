@@ -71,7 +71,7 @@ def check_notebook_dependencies() -> None:
 def check_optional_dependencies() -> None:
     # Importar o SDK não exige chave e não faz uma requisição à API.
     importlib.import_module("google.genai")
-    print(f"Google Gen AI SDK: {version('google-genai')} (importação OK; API não chamada)")
+    print(f"SDK Gemini: {version('google-genai')} (importação OK; API não chamada)")
 
     # O cliente efêmero não cria dados permanentes. Vetores explícitos evitam
     # baixar um modelo de embeddings durante a verificação.
@@ -100,7 +100,7 @@ def check_optional_dependencies() -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--notebooks", action="store_true", help="Verifica ferramentas de notebook")
-    parser.add_argument("--optional", action="store_true", help="Verifica SDK Google e ChromaDB")
+    parser.add_argument("--optional", action="store_true", help="Verifica SDK Gemini e ChromaDB")
     arguments = parser.parse_args()
     try:
         check_base()

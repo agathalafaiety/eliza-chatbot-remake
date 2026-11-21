@@ -28,6 +28,18 @@ Abra o chat em [127.0.0.1:8501](http://127.0.0.1:8501) e clique em **Nova conver
 
 O histórico fica em `data/eliza.db`. [Configuração do banco](docs/persistence.md)
 
+## Modo IA com Gemini
+
+Instale o SDK na mesma `.venv`.
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-ai.txt
+```
+
+Crie um arquivo `.env` local a partir de `.env.example` e preencha `GEMINI_API_KEY`. Reinicie o Streamlit e selecione **IA · Gemini** ao criar uma conversa. O modelo padrão é `gemini-3.5-flash` e pode ser alterado em `GEMINI_MODEL`.
+
+O modo IA envia ao Gemini a mensagem atual e até dez turnos recentes da conversa. O Classic continua disponível offline. [Guia da API Gemini](https://ai.google.dev/gemini-api/docs/api-key)
+
 ## Acompanhar no Jupyter
 
 Instale as dependências de desenvolvimento na mesma `.venv`.

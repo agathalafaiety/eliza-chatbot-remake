@@ -16,6 +16,7 @@ def database_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.setenv(
         "ELIZA_DATABASE_URL", URL.create("sqlite", database=str(path)).render_as_string()
     )
+    monkeypatch.setenv("GEMINI_API_KEY", "")
     return path
 
 
@@ -96,4 +97,41 @@ def test_invalid_input_keeps_history_and_allows_retry(database_path: Path) -> No
     with ConversationRepository(database_path) as repository:
         assert repository.get_history(conversation_id).messages == ()
     app.chat_input[0].set_value("Olá").run()
+    assert len(app.chat_message) == 2
+
+
+def test_ai_mode_is_optional_and_keeps_its_own_history(database_path: Path, monkeypatch) -> None:
+    pytest.importorskip("google.genai")
+    with ConversationRepository(database_path) as repo:
+        classic = repo.create_conversation("Offline")
+    offline = open_app()
+    assert offline.radio[0].disabled
+    monkeypatch.setenv("GEMINI_API_KEY", "teste-sem-rede")
+    calls = []
+
+    def generate(settings, history, message):
+        calls.append((history, message))
+        return "Qual parte desse assunto você quer explorar?"
+
+    monkeypatch.setattr("eliza.ai._generate", generate)
+    app = open_app()
+    app.radio[0].set_value("IA · Gemini")
+    button(app, "Nova conversa").click().run()
+    assert not app.exception
+    conversation_id = app.session_state["conversation_id"]
+    app.chat_input[0].set_value("Quero falar de música.").run()
+    assert len(calls) == 1
+    assert app.chat_message[-1].text[0].value == "Qual parte desse assunto você quer explorar?"
+
+    app.selectbox(key="conversation_id").select(classic.id).run()
+    app.chat_input[0].set_value("Olá!").run()
+    assert len(calls) == 1
+    with ConversationRepository(database_path) as repo:
+        saved = repo.get_history(conversation_id)
+        assert saved.conversation.mode == "ai"
+        assert saved.messages[0].content == "Quero falar de música."
+
+    monkeypatch.setenv("GEMINI_API_KEY", "")
+    app.selectbox(key="conversation_id").select(conversation_id).run()
+    assert not app.chat_input
     assert len(app.chat_message) == 2

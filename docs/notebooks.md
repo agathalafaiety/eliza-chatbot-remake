@@ -33,8 +33,7 @@ Execute em ordem. Para repetir somente essa demonstração, volte à célula **C
 
 - O notebook usa o kernel `.venv` da pasta local do projeto e importa os módulos diretamente desta pasta.
 - Os bancos demonstrados no notebook são temporários, com mensagens fictícias. A conversa livre Classic continua somente na memória; a seção de persistência salva explicitamente outras conversas fictícias. O banco permanente usa `data/`, fora do Git, quando você abre `ConversationRepository.from_settings()`.
-- Não copie a chave Google para células ou saídas; quando a integração AI for implementada, use o arquivo local `.env`.
-- ChromaDB e Google AI serão demonstrados em notebooks próprios quando essas funcionalidades forem implementadas.
+- O modo IA está disponível na interface Streamlit. Configure `GEMINI_API_KEY` no arquivo local `.env` para usá-lo.
 - Para conversar no navegador e usar o histórico permanente, inicie o Streamlit conforme o [README](../README.md#como-executar-no-windows).
 
 ## Verificação automatizada local

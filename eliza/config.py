@@ -6,19 +6,22 @@ import os
 from pathlib import Path
 
 from dotenv import dotenv_values
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, SecretStr, field_validator
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DATABASE_PATH = Path("data") / "eliza.db"
 DEFAULT_DATABASE_URL = f"sqlite:///{DEFAULT_DATABASE_PATH.as_posix()}"
+DEFAULT_GEMINI_MODEL = "gemini-3.5-flash"
 
 
 class Settings(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid", hide_input_in_errors=True)
 
     database_url: str = DEFAULT_DATABASE_URL
+    gemini_api_key: SecretStr | None = None
+    gemini_model: str = DEFAULT_GEMINI_MODEL
 
     @field_validator("database_url")
     @classmethod
@@ -49,5 +52,13 @@ class Settings(BaseModel):
 def load_settings(env_file: Path | None = None) -> Settings:
     """Lê a configuração local, dando prioridade às variáveis do ambiente."""
     values = dotenv_values(env_file if env_file is not None else PROJECT_ROOT / ".env")
-    value = os.environ.get("ELIZA_DATABASE_URL", values.get("ELIZA_DATABASE_URL"))
-    return Settings() if value is None else Settings(database_url=value)
+    database_url = os.environ.get("ELIZA_DATABASE_URL", values.get("ELIZA_DATABASE_URL"))
+    api_key = (os.environ.get("GEMINI_API_KEY", values.get("GEMINI_API_KEY")) or "").strip()
+    if not api_key:
+        api_key = (os.environ.get("GOOGLE_API_KEY", values.get("GOOGLE_API_KEY")) or "").strip()
+    model = (os.environ.get("GEMINI_MODEL", values.get("GEMINI_MODEL")) or "").strip()
+    return Settings(
+        database_url=DEFAULT_DATABASE_URL if database_url is None else database_url,
+        gemini_api_key=SecretStr(api_key) if api_key else None,
+        gemini_model=model or DEFAULT_GEMINI_MODEL,
+    )
