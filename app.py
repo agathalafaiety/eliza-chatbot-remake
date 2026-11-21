@@ -33,7 +33,7 @@ def main() -> None:
     try:
         with ConversationRepository(path) as repository:
             ai_unavailable = unavailable_reason(settings)
-            conversation_id = render_sidebar(repository, ai_unavailable)
+            conversation_id = render_sidebar(repository, ai_unavailable, settings.chroma_path)
             render_chat(repository, conversation_id, settings, ai_unavailable)
     except ConversationNotFoundError:
         st.session_state.pop("conversation_id", None)

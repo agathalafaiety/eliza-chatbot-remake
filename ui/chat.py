@@ -34,6 +34,10 @@ def render_chat(
     st.text(saved.conversation.title)
     if is_ai:
         st.caption("Modo IA · A mensagem e parte do histórico recente são enviados ao Gemini.")
+        if settings.semantic_memory:
+            st.caption(
+                "Memória semântica · Trechos antigos podem ser enviados ao Gemini para busca."
+            )
     else:
         st.caption("Modo Classic · Respostas offline")
     if not saved.messages:

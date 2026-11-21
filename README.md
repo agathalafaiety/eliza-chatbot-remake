@@ -40,6 +40,10 @@ Crie um arquivo `.env` local a partir de `.env.example` e preencha `GEMINI_API_K
 
 O modo IA envia ao Gemini a mensagem atual e até dez turnos recentes da conversa. O Classic continua disponível offline. [Guia da API Gemini](https://ai.google.dev/gemini-api/docs/api-key)
 
+### Memória semântica opcional
+
+Para recuperar trechos antigos da mesma conversa, instale `requirements-memory.txt` na `.venv` e defina `ELIZA_ENABLE_SEMANTIC_MEMORY=true` no `.env`. Os trechos são enviados ao Gemini para gerar embeddings. O ChromaDB guarda os vetores em `data/chroma` e o SQLite continua guardando as mensagens. [Detalhes da arquitetura](docs/architecture.md#memória-semântica)
+
 ## Acompanhar no Jupyter
 
 Instale as dependências de desenvolvimento na mesma `.venv`.

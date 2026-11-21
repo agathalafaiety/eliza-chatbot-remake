@@ -21,7 +21,7 @@ jobs:
           python-version: ${{ matrix.python }}
           cache: pip
       - name: Instalar dependências de desenvolvimento
-        run: python -m pip install -r requirements-dev.txt -r requirements-ai.txt
+        run: python -m pip install -r requirements-dev.txt -r requirements-ai.txt -r requirements-memory.txt
       - name: Verificar dependências
         run: python -m pip check
       - name: Verificar estilo

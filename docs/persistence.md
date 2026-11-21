@@ -82,7 +82,7 @@ with ConversationRepository.from_settings() as repository:
     # removed = repository.delete_conversation(chosen_id)
 ```
 
-As mensagens são removidas pela chave estrangeira `ON DELETE CASCADE`, ativa em cada conexão do repositório. Conversas diferentes permanecem intactas. A exclusão não remove o arquivo do banco inteiro. Não há índice ChromaDB de conversas implementado nesta etapa.
+As mensagens são removidas pela chave estrangeira `ON DELETE CASCADE`, ativa em cada conexão do repositório. Para excluir uma conversa Gemini com índice, use a interface ou `eliza.semantic_memory.delete_conversation(repository, settings.chroma_path, id)`. Essa operação remove também a coleção ChromaDB da conversa. A exclusão direta pelo repositório atua somente no SQLite.
 
 Erros de banco são expostos como `StorageError`, `ConversationNotFoundError` ou `ConversationConflictError`, sem conteúdos das mensagens, SQL completo ou caminhos sensíveis nos logs do repositório. Dados locais, bancos e arquivos WAL/SHM estão fora do Git por `.gitignore`.
 

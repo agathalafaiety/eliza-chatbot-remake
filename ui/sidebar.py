@@ -1,13 +1,18 @@
 """Criação, seleção e exclusão de conversas salvas."""
 
+from pathlib import Path
+
 import streamlit as st
 
 from database import ConversationRepository
+from eliza.semantic_memory import delete_conversation
 
 PAGE_SIZE = 50
 
 
-def render_sidebar(repository: ConversationRepository, ai_unavailable: str | None) -> str | None:
+def render_sidebar(
+    repository: ConversationRepository, ai_unavailable: str | None, chroma_path: Path
+) -> str | None:
     with st.sidebar:
         st.header("Conversas")
         with st.form("new_conversation", clear_on_submit=True):
@@ -64,13 +69,15 @@ def render_sidebar(repository: ConversationRepository, ai_unavailable: str | Non
         if st.session_state.get("delete_target") != conversation_id:
             st.session_state.pop("delete_target", None)
         if conversation_id is not None:
-            _render_delete(repository, conversation_id)
+            _render_delete(repository, conversation_id, chroma_path)
         st.divider()
         st.caption("O histórico é salvo no SQLite neste computador.")
         return conversation_id
 
 
-def _render_delete(repository: ConversationRepository, conversation_id: str) -> None:
+def _render_delete(
+    repository: ConversationRepository, conversation_id: str, chroma_path: Path
+) -> None:
     if st.button("Excluir conversa", key="delete_conversation"):
         st.session_state["delete_target"] = conversation_id
     if st.session_state.get("delete_target") != conversation_id:
@@ -81,7 +88,7 @@ def _render_delete(repository: ConversationRepository, conversation_id: str) -> 
         st.session_state.pop("delete_target", None)
         st.rerun()
     if st.button("Confirmar exclusão", key=f"confirm_delete_{conversation_id}", type="primary"):
-        removed = repository.delete_conversation(conversation_id)
+        removed = delete_conversation(repository, chroma_path, conversation_id)
         st.session_state.pop("conversation_id", None)
         st.session_state.pop("delete_target", None)
         st.session_state["notice"] = (

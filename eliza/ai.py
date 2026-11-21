@@ -1,11 +1,13 @@
 """Adaptador opcional da API Gemini para o modo ELIZA IA."""
 
 import logging
+from functools import partial
 from importlib.util import find_spec
 
 from database import ConversationRepository, SavedTurn, StoredMessage
 from eliza.classic import ClassicEliza
 from eliza.config import Settings
+from eliza.semantic_memory import EMBEDDING_MODEL, recall
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +22,7 @@ INSTRUCTIONS = (
     "Apresente-se como uma simulação se perguntarem. Não alegue ser profissional de saúde, "
     "não faça diagnósticos e não recomende tratamentos."
 )
+GEMINI_API_URL = "https://generativelanguage.googleapis.com"
 
 
 class GeminiError(RuntimeError):
@@ -79,7 +82,7 @@ def _generate(settings: Settings, history: tuple[StoredMessage, ...], message: s
             api_key=settings.gemini_api_key.get_secret_value(),
             enterprise=False,
             http_options=types.HttpOptions(
-                base_url="https://generativelanguage.googleapis.com",
+                base_url=GEMINI_API_URL,
                 api_version="v1beta",
                 timeout=30_000,
                 retry_options=types.HttpRetryOptions(
@@ -115,6 +118,35 @@ def _generate(settings: Settings, history: tuple[StoredMessage, ...], message: s
     return reply
 
 
+def _embed(settings: Settings, texts: list[str], query: bool) -> list[list[float]]:
+    from google import genai
+    from google.genai import types
+
+    assert settings.gemini_api_key is not None
+    with genai.Client(
+        api_key=settings.gemini_api_key.get_secret_value(),
+        enterprise=False,
+        http_options=types.HttpOptions(
+            base_url=GEMINI_API_URL,
+            api_version="v1beta",
+            timeout=8_000,
+            retry_options=types.HttpRetryOptions(attempts=1),
+        ),
+    ) as client:
+        response = client.models.embed_content(
+            model=EMBEDDING_MODEL,
+            contents=texts,
+            config=types.EmbedContentConfig(
+                task_type="RETRIEVAL_QUERY" if query else "RETRIEVAL_DOCUMENT",
+                output_dimensionality=768,
+            ),
+        )
+    vectors = [item.values for item in response.embeddings or []]
+    if len(vectors) != len(texts) or any(not vector or len(vector) != 768 for vector in vectors):
+        raise GeminiError("O Gemini retornou vetores incompletos.")
+    return [vector for vector in vectors if vector is not None]
+
+
 def send_ai_turn(
     repository: ConversationRepository, settings: Settings, conversation_id: str, message: str
 ) -> SavedTurn:
@@ -126,7 +158,13 @@ def send_ai_turn(
         raise ValueError("Abra uma conversa no modo IA para usar o Gemini.")
     if len(saved.messages) != saved.conversation.revision * 2:
         raise GeminiError("O histórico está incompleto. Abra uma nova conversa para continuar.")
-    reply = _generate(settings, _recent_history(saved.messages), message)
+    recent = _recent_history(saved.messages)
+    older = (
+        recall(repository, settings.chroma_path, saved, recent, message, partial(_embed, settings))
+        if settings.semantic_memory and settings.gemini_api_key
+        else ()
+    )
+    reply = _generate(settings, older + recent, message)
     return repository.append_turn(
         conversation_id,
         message,

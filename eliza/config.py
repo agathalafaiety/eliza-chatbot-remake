@@ -22,6 +22,8 @@ class Settings(BaseModel):
     database_url: str = DEFAULT_DATABASE_URL
     gemini_api_key: SecretStr | None = None
     gemini_model: str = DEFAULT_GEMINI_MODEL
+    semantic_memory: bool = False
+    chroma_path: Path = PROJECT_ROOT / "data" / "chroma"
 
     @field_validator("database_url")
     @classmethod
@@ -57,8 +59,14 @@ def load_settings(env_file: Path | None = None) -> Settings:
     if not api_key:
         api_key = (os.environ.get("GOOGLE_API_KEY", values.get("GOOGLE_API_KEY")) or "").strip()
     model = (os.environ.get("GEMINI_MODEL", values.get("GEMINI_MODEL")) or "").strip()
+    semantic = os.environ.get(
+        "ELIZA_ENABLE_SEMANTIC_MEMORY", values.get("ELIZA_ENABLE_SEMANTIC_MEMORY")
+    )
+    chroma_path = os.environ.get("ELIZA_CHROMA_PATH", values.get("ELIZA_CHROMA_PATH"))
     return Settings(
         database_url=DEFAULT_DATABASE_URL if database_url is None else database_url,
         gemini_api_key=SecretStr(api_key) if api_key else None,
         gemini_model=model or DEFAULT_GEMINI_MODEL,
+        semantic_memory=(semantic or "").strip().casefold() in {"1", "true", "yes", "on"},
+        chroma_path=PROJECT_ROOT / ((chroma_path or "").strip() or "data/chroma"),
     )

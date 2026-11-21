@@ -34,5 +34,14 @@ Ao retomar o Classic, o serviço reproduz as entradas anteriores para recompor a
 
 ## Próximas etapas
 
-1. **ChromaDB.** Um índice opcional recupera trechos relevantes para o modo IA. SQLite será a fonte do histórico e permitirá reconstruir o índice. Quando a integração existir, a exclusão também deverá remover as entradas correspondentes do índice.
-2. **Implantação.** Validar os modos integrados e documentar o ambiente de produção.
+1. **Implantação.** Validar os modos integrados e documentar o ambiente de produção.
+
+## Memória semântica
+
+`eliza/semantic_memory.py` usa um índice ChromaDB por conversa Gemini. O recurso começa desativado. Para ativá-lo, instale `requirements-memory.txt` e defina `ELIZA_ENABLE_SEMANTIC_MEMORY=true` no `.env`. `ELIZA_CHROMA_PATH` permite escolher a pasta local do índice.
+
+O índice guarda identificadores de turnos e vetores. Os textos são consultados no SQLite. Primeiro, o sistema separa os turnos recentes já incluídos no contexto. Depois considera até 100 turnos mais antigos, indexando até 12 turnos faltantes por envio. A busca por distância de cosseno pode trazer até três turnos completos, com limite adicional de 3.600 caracteres. A busca fica restrita à conversa aberta e só utiliza identificadores presentes no histórico.
+
+Para gerar os vetores, o aplicativo envia os trechos antigos e a mensagem atual à API Gemini com o modelo `gemini-embedding-001`. Se o SDK, o índice ou os embeddings ficarem indisponíveis, o Gemini segue com o contexto recente. [Documentação dos embeddings Gemini](https://ai.google.dev/gemini-api/docs/embeddings)
+
+A exclusão pela interface remove primeiro a coleção da conversa, se ela existir na pasta configurada, e depois exclui o histórico SQLite. Uma falha na remoção do índice mantém a conversa disponível para repetir a operação. O ChromaDB roda no mesmo processo da aplicação local. [Documentação do cliente persistente Chroma](https://docs.trychroma.com/reference/python/client)
