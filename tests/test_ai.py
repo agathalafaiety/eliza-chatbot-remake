@@ -17,9 +17,10 @@ Client = genai.Client
 
 @pytest.fixture
 def intercept_api(monkeypatch):
-    def install(handler):
+    def install(handler, *, use_app_retry=False):
         def client(**options):
-            options["http_options"].retry_options.attempts = 1
+            if not use_app_retry:
+                options["http_options"].retry_options.attempts = 1
             options["http_options"].httpx_client = httpx2.Client(
                 transport=httpx2.MockTransport(handler)
             )
@@ -37,7 +38,8 @@ def test_ai_sends_bounded_history_and_saves_reply(tmp_path: Path, intercept_api)
         )
         assert request.headers["x-goog-api-key"] == "teste-sem-rede"
         payload = json.loads(request.content)
-        assert payload["generationConfig"]["maxOutputTokens"] == 1024
+        assert payload["generationConfig"]["maxOutputTokens"] == 512
+        assert "thinkingConfig" not in payload["generationConfig"]
         assert "português brasileiro" in payload["systemInstruction"]["parts"][0]["text"]
         assert payload["contents"] == [
             {"role": "user", "parts": [{"text": "Falei sobre meu trabalho."}]},
@@ -71,12 +73,47 @@ def test_ai_sends_bounded_history_and_saves_reply(tmp_path: Path, intercept_api)
         assert repo.get_history(conversation.id).messages[-2:] == (turn.user, turn.assistant)
 
 
+def test_flash_lite_recovers_from_504_and_saves_one_turn(tmp_path: Path, intercept_api) -> None:
+    attempts = 0
+
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        nonlocal attempts
+        attempts += 1
+        assert request.url.path.endswith("gemini-3.5-flash-lite:generateContent")
+        config = json.loads(request.content)["generationConfig"]
+        assert config["thinkingConfig"] == {"thinking_level": "MINIMAL"}
+        if attempts == 1:
+            return httpx2.Response(504, json={"error": {"code": 504, "message": "Gateway timeout"}})
+        return httpx2.Response(
+            200,
+            json={
+                "candidates": [
+                    {
+                        "content": {
+                            "role": "model",
+                            "parts": [{"text": "Sobre o que você gostaria de conversar?"}],
+                        }
+                    }
+                ]
+            },
+        )
+
+    intercept_api(respond, use_app_retry=True)
+    with ConversationRepository(tmp_path / "flash-lite.db") as repo:
+        conversation = repo.create_conversation(mode="ai")
+        settings = Settings(gemini_api_key=SecretStr("teste-sem-rede"))
+        assert send_ai_turn(repo, settings, conversation.id, "Olá").assistant.content
+        assert attempts == 2
+        assert len(repo.get_history(conversation.id).messages) == 2
+
+
 @pytest.mark.parametrize(
     ("status", "message"),
     [
         (401, "Confira GEMINI_API_KEY"),
         (429, "limite de uso"),
         (503, "temporariamente indisponível"),
+        (504, "temporariamente indisponível"),
         (200, "não retornou texto"),
     ],
 )

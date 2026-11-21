@@ -18,7 +18,7 @@ Para conversar em memória, o notebook chama `ClassicEliza` diretamente. Para sa
 
 No Streamlit, `st.session_state` guarda a seleção e a confirmação de exclusão. A cada execução a interface lê o histórico do SQLite e encaminha novos envios ao mesmo serviço usado pelo notebook. Cada execução tem seu próprio escopo de repositório. A interface requer um arquivo SQLite para preservar conversas entre execuções.
 
-O modo é definido na criação da conversa. No modo IA, `eliza/ai.py` usa a API Gemini com instruções em português brasileiro. A requisição inclui a mensagem atual e até dez turnos anteriores completos, limitados a 12.000 caracteres de histórico. O adaptador limita a saída a 1.024 tokens. O histórico completo fica no SQLite. A geração ocorre antes da gravação e o turno só é salvo após uma resposta com texto e uma verificação da revisão. [Referência da API Gemini](https://ai.google.dev/api/generate-content)
+O modo é definido na criação da conversa. No modo IA, `eliza/ai.py` usa a API Gemini com instruções em português brasileiro. A requisição inclui a mensagem atual e até dez turnos anteriores completos, limitados a 12.000 caracteres de histórico. O adaptador limita a saída a 512 tokens e configura raciocínio mínimo para Gemini 3.5 Flash e Flash-Lite. O histórico completo fica no SQLite. A geração ocorre antes da gravação e o turno só é salvo após uma resposta com texto e uma verificação da revisão. [Referência da API Gemini](https://ai.google.dev/api/generate-content)
 
 ## Regras e estado da conversa
 

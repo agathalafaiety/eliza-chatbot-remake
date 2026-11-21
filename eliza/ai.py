@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 MAX_CONTEXT_TURNS = 10
 MAX_HISTORY_CHARS = 12_000
-MAX_OUTPUT_TOKENS = 1024
+MAX_OUTPUT_TOKENS = 512
 WELCOME = "Olá, sou a ELIZA no modo IA. Sobre o que você gostaria de conversar?"
 INSTRUCTIONS = (
     "Você é ELIZA, uma simulação conversacional inspirada no roteiro DOCTOR. "
@@ -65,6 +65,15 @@ def _generate(settings: Settings, history: tuple[StoredMessage, ...], message: s
         for item in history
     ]
     contents.append(types.Content(role="user", parts=[types.Part(text=message)]))
+    config = types.GenerateContentConfig(
+        system_instruction=INSTRUCTIONS,
+        max_output_tokens=MAX_OUTPUT_TOKENS,
+    )
+    if settings.gemini_model.removeprefix("models/") in (
+        "gemini-3.5-flash",
+        "gemini-3.5-flash-lite",
+    ):
+        config.thinking_config = types.ThinkingConfig(thinking_level=types.ThinkingLevel.MINIMAL)
     try:
         with genai.Client(
             api_key=settings.gemini_api_key.get_secret_value(),
@@ -81,10 +90,7 @@ def _generate(settings: Settings, history: tuple[StoredMessage, ...], message: s
             response = client.models.generate_content(
                 model=settings.gemini_model,
                 contents=contents,
-                config=types.GenerateContentConfig(
-                    system_instruction=INSTRUCTIONS,
-                    max_output_tokens=MAX_OUTPUT_TOKENS,
-                ),
+                config=config,
             )
     except (HTTPError, OSError):
         raise GeminiError("O Gemini não respondeu. Confira a conexão e tente novamente.") from None
