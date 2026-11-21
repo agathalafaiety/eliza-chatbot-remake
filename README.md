@@ -1,12 +1,22 @@
 # Eliza Chatbot Remake
 
-ELIZA Classic em português brasileiro, com chat local no Streamlit, histórico em SQLite e exemplos no Jupyter. A recriação é inspirada no roteiro DOCTOR e usa reconhecimento de padrões, transformação de pronomes e perguntas reflexivas. ELIZA é uma simulação conversacional.
+## O que foi a ELIZA?
+
+A ELIZA foi um dos primeiros programas de conversação por texto. Joseph Weizenbaum a desenvolveu no MIT, na década de 1960, para investigar a comunicação em linguagem natural entre pessoas e computadores. Em 1966, ele descreveu o programa na revista *Communications of the ACM*. O nome veio de Eliza Doolittle, personagem da peça *Pigmalião*, de George Bernard Shaw. [Artigo original de Joseph Weizenbaum](https://doi.org/10.1145/365153.365168)
+
+O programa podia executar roteiros diferentes. Um deles, **DOCTOR**, imitava o estilo de conversa de um psicoterapeuta da abordagem centrada na pessoa. A ELIZA procurava palavras-chave, identificava trechos da mensagem e os reorganizava em respostas previstas pelo roteiro. Reformular uma frase como pergunta era uma forma de manter o diálogo. [Descrição do mecanismo e da simulação no artigo original](https://courses.cs.umbc.edu/undergraduate/331/papers/eliza.january1966.html)
+
+Um aspecto marcante do trabalho é que essas regras podiam criar a impressão de que o programa compreendia o interlocutor. Essa tendência de atribuir compreensão a um programa a partir de suas respostas ficou conhecida como **efeito ELIZA**. [Contexto histórico do Instituto Weizenbaum](https://www.weizenbaum-institut.de/media/Publikationen/Weizenbaum_Journal/CfP_Celebrating_ELIZA.pdf)
+
+## Sobre este projeto
+
+O **Eliza Chatbot Remake** é uma releitura educacional em português brasileiro, com regras próprias inspiradas no DOCTOR. O modo Classic usa expressões regulares, transformação de pronomes e perguntas reflexivas para simular uma conversa. O exemplo abaixo é uma resposta produzida pelo projeto.
 
 > **Você:** Estou preocupado com meu futuro.
 >
 > **ELIZA:** O que preocupa você em relação a seu futuro?
 
-O chat funciona offline e permite criar, retomar e excluir conversas. Ao retomar uma conversa, o Classic recupera o contexto a partir das mensagens salvas.
+O chat local roda no **Streamlit** e funciona offline. O histórico em **SQLite** permite criar, retomar e excluir conversas. Ao reabrir uma conversa, o Classic recupera o contexto a partir das mensagens salvas. No **Jupyter**, você pode acompanhar as regras acionadas e experimentar o fluxo de persistência com dados fictícios.
 
 ## Começar no Windows
 
