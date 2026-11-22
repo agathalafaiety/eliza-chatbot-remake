@@ -26,6 +26,21 @@ function apply(command) {
   return null;
 }
 
+async function writeHistory(command) {
+  if (!navigator.locks) return apply(command);
+  let acquired = false;
+  try {
+    return await navigator.locks.request(storageKey, () => {
+      acquired = true;
+      return apply(command);
+    });
+  } catch (error) {
+    if (acquired) throw error;
+    // Some embedded browsers allow local storage but deny Web Locks for the iframe.
+    return apply(command);
+  }
+}
+
 export default function ({ data, parentElement, setStateValue }) {
   const mount = mounts.get(parentElement) ?? {
     commandId: null, error: null, pending: null, lastSnapshot: null,
@@ -51,11 +66,7 @@ export default function ({ data, parentElement, setStateValue }) {
   const command = data?.command;
   if (command && mount.commandId !== command.id) {
     if (!mount.pending) {
-      const write = () => apply(command);
-      // Serialize simultaneous changes from multiple tabs when Web Locks is available.
-      mount.pending = Promise.resolve().then(() => navigator.locks
-        ? navigator.locks.request(storageKey, write)
-        : write())
+      mount.pending = writeHistory(command)
         .then(error => { mount.error = error; })
         .catch(() => { mount.error = 'write'; })
         .finally(() => {

@@ -76,6 +76,7 @@ def select_conversation(history: list[Conversation]) -> Conversation | None:
         if st.button("Nova conversa", icon=":material/add:", width="stretch"):
             state.gemini_selected = None
             state.pop("gemini_delete", None)
+            state.pop("gemini_notice", None)
         if state.get("gemini_selected") not in conversations:
             state.gemini_selected = None
         selected = st.selectbox(
@@ -99,6 +100,7 @@ def select_conversation(history: list[Conversation]) -> Conversation | None:
                 if st.button("Confirmar exclusão"):
                     state.gemini_command = delete_conversation(selected)
                     state.pop("gemini_delete", None)
+                    state.pop("gemini_notice", None)
                     st.rerun()
         return conversations.get(selected)
 
@@ -129,7 +131,7 @@ def main() -> None:
             return
         state.pop("gemini_command")
         if snapshot.error is not None:
-            st.warning(STORAGE_ERRORS[snapshot.error])
+            state.gemini_notice = STORAGE_ERRORS[snapshot.error]
         elif command["operation"] == "save":
             state.gemini_selected = command["conversationId"]
 
@@ -143,8 +145,9 @@ def main() -> None:
     for turn in turns:
         show_message(Message("user", turn.user))
         show_message(Message("assistant", turn.assistant))
-    if notice := state.pop("gemini_notice", None):
-        st.warning(notice)
+    notice = st.empty()
+    if text := state.get("gemini_notice"):
+        notice.warning(text)
 
     history_full = conversation is None and len(snapshot.history) >= MAX_CONVERSATIONS
     conversation_full = len(turns) >= MAX_TURNS
@@ -166,6 +169,8 @@ def main() -> None:
     )
     if submitted is None:
         return
+    state.pop("gemini_notice", None)
+    notice.empty()
     message_text = submitted.strip()
     if not message_text or len(message_text) > MAX_MESSAGE_LENGTH:
         st.warning(f"Digite uma mensagem com até {MAX_MESSAGE_LENGTH} caracteres.")
