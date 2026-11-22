@@ -1,6 +1,9 @@
 # Eliza Chatbot Remake
 
-[Experimente a ELIZA Classic no Streamlit](https://eliza-classic-pt.streamlit.app/)
+Experimente no Streamlit
+
+- [ELIZA Classic](https://eliza-classic-pt.streamlit.app/) — conversa baseada em regras
+- [ELIZA com Gemini](https://eliza-gemini-pt.streamlit.app/) — conversa com IA generativa
 
 ## A ELIZA original
 
