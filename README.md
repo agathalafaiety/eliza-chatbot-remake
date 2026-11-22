@@ -1,5 +1,7 @@
 # Eliza Chatbot Remake
 
+[Experimente a ELIZA Classic no Streamlit](https://eliza-classic-pt.streamlit.app/)
+
 ## A ELIZA original
 
 A ELIZA foi um dos primeiros programas de conversação por texto. Joseph Weizenbaum a desenvolveu no MIT e apresentou o trabalho em 1966. O nome veio de Eliza Doolittle, personagem da peça *Pigmalião*, de George Bernard Shaw. [Artigo original](https://doi.org/10.1145/365153.365168)
