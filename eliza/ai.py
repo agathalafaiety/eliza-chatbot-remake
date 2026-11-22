@@ -3,8 +3,9 @@
 import logging
 from functools import partial
 from importlib.util import find_spec
+from typing import Protocol, TypeVar
 
-from database import ConversationRepository, SavedTurn, StoredMessage
+from database import ConversationRepository, SavedTurn
 from eliza.classic import ClassicEliza
 from eliza.config import Settings
 from eliza.semantic_memory import EMBEDDING_MODEL, recall
@@ -29,6 +30,17 @@ class GeminiError(RuntimeError):
     """Falha de configuração ou resposta que pode ser mostrada na interface."""
 
 
+class ChatMessage(Protocol):
+    @property
+    def role(self) -> str: ...
+
+    @property
+    def content(self) -> str: ...
+
+
+Message = TypeVar("Message", bound=ChatMessage)
+
+
 def unavailable_reason(settings: Settings) -> str | None:
     if not settings.gemini_api_key or not settings.gemini_api_key.get_secret_value().strip():
         return "Configure GEMINI_API_KEY no arquivo .env para habilitar o modo IA."
@@ -37,7 +49,7 @@ def unavailable_reason(settings: Settings) -> str | None:
     return None
 
 
-def _recent_history(messages: tuple[StoredMessage, ...]) -> tuple[StoredMessage, ...]:
+def _recent_history(messages: tuple[Message, ...]) -> tuple[Message, ...]:
     """Seleciona um sufixo de turnos completos sem cortar mensagens no meio."""
     start = len(messages)
     chars = 0
@@ -50,7 +62,7 @@ def _recent_history(messages: tuple[StoredMessage, ...]) -> tuple[StoredMessage,
     return messages[start:]
 
 
-def _generate(settings: Settings, history: tuple[StoredMessage, ...], message: str) -> str:
+def _generate(settings: Settings, history: tuple[ChatMessage, ...], message: str) -> str:
     reason = unavailable_reason(settings)
     if reason:
         raise GeminiError(reason)
@@ -116,6 +128,11 @@ def _generate(settings: Settings, history: tuple[StoredMessage, ...], message: s
     if not reply:
         raise GeminiError("O Gemini não retornou texto. Tente reformular a mensagem.")
     return reply
+
+
+def generate_reply(settings: Settings, history: tuple[ChatMessage, ...], message: str) -> str:
+    """Responde a partir de pares completos em memória, sem persistir mensagens."""
+    return _generate(settings, _recent_history(history), message)
 
 
 def _embed(settings: Settings, texts: list[str], query: bool) -> list[list[float]]:
